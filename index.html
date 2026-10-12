@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il Giardino delle Rose | Casa Vacanze Maracalagonis (CA)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        // CONFIGURAZIONE FACILMENTE MODIFICABILE DEL SITO
+        const SITE_CONFIG = {
+            propertyName: "Il Giardino delle Rose",
+            address: "Via Coco 14, 09069 Maracalagonis (CA)",
+            phone: "+39 070 1234567",
+            whatsapp: "393339876543",
+            email: "info@ilgiardinodellerose.it",
+            basePricePerNight: 120,
+            cleaningFee: 50,
+            extraGuestFee: 20, // per guest oltre 2
+            attractions: [
+                { title: "Spiaggia del Poetto", desc: "La celebre spiaggia tra Cagliari e Quartu", time: "10 min" },
+                { title: "Parco Naturale Molentargius", desc: "Oasi naturale dei fenicotteri rosa", time: "15 min" },
+                { title: "Costa Rei & Villasimius", desc: "Spiagge da sogno del Sud-Est Sardegna", time: "20/30 min" },
+                { title: "Centro Commerciale & Multisala", desc: "I complessi più grandi di Cagliari per shopping e cinema", time: "10 min" },
+                { title: "Borgo di Maracalagonis", desc: "Paese tranquillo e rilassante, ricco di tradizioni", time: "In centro" }
+            ]
+        };
+
+        // CREDENZIALI ADMIN DI DEFAULT
+        const DEFAULT_ADMIN_AUTH = {
+            username: "admin",
+            password: "rose2026"
+        };
+
+        function getAdminAuth() {
+            const auth = localStorage.getItem('rose_garden_admin_auth');
+            return auth ? JSON.parse(auth) : DEFAULT_ADMIN_AUTH;
+        }
+
+        function setAdminAuth(username, password) {
+            localStorage.setItem('rose_garden_admin_auth', JSON.stringify({ username, password }));
+        }
+
+        function isAdminLoggedIn() {
+            return localStorage.getItem('rose_garden_admin_logged_in') === 'true';
+        }
+
+        function setAdminLoggedIn(status) {
+            localStorage.setItem('rose_garden_admin_logged_in', status ? 'true' : 'false');
+            window.dispatchEvent(new Event('adminAuthUpdated'));
+        }
+
+        // DATABASE PRENOTAZIONI (Local Storage + Mock iniziale)
+        const DEFAULT_BOOKINGS = [
+            {
+                id: "RES-1001",
+                guest_name: "Marco Rossi",
+                guest_email: "marco.rossi@example.com",
+                guest_phone: "+39 340 1234567",
+                check_in: "2026-10-15",
+                check_out: "2026-10-20",
+                guests_count: 2,
+                total_price: 650,
+                status: "confirmed",
+                payment_status: "paid",
+                notes: "Cliente fisso - Arrivo sera"
+            },
+            {
+                id: "RES-1002",
+                guest_name: "Anna Bianchi",
+                guest_email: "anna.b@example.com",
+                guest_phone: "+39 338 9876543",
+                check_in: "2026-11-01",
+                check_out: "2026-11-05",
+                guests_count: 4,
+                total_price: 580,
+                status: "confirmed",
+                payment_status: "deposit",
+                notes: "Acconto versato"
+            }
+        ];
+
+        function getStoredBookings() {
+            const stored = localStorage.getItem('rose_garden_bookings');
+            if (!stored) {
+                localStorage.setItem('rose_garden_bookings', JSON.stringify(DEFAULT_BOOKINGS));
+                return DEFAULT_BOOKINGS;
+            }
+            return JSON.parse(stored);
+        }
+
+        function saveBookings(bookings) {
+            localStorage.setItem('rose_garden_bookings', JSON.stringify(bookings));
+            window.dispatchEvent(new Event('bookingsUpdated'));
+        }
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        rosebrand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            300: '#fda4af',
+                            400: '#fb7185',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        },
+                        garden: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                        },
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#f8f4ec',
+                            200: '#f0e6d6',
+                            300: '#e5d3ba',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .hero-overlay {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.85) 100%);
+        }
+        .text-shadow {
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="font-sans bg-cream-50 text-slate-800 antialiased selection:bg-rosebrand-500 selection:text-white">
+
+    <!-- Header / Navigation -->
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 py-3.5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <span class="p-2.5 bg-rosebrand-600 text-white rounded-full shadow-md group-hover:scale-105 transition-transform flex items-center justify-center">
+                        <i data-lucide="flower-2" class="w-5 h-5"></i>
+                    </span>
+                    <div class="flex flex-col">
+                        <span class="text-white font-serif font-bold text-xl sm:text-2xl leading-none tracking-wide">Il Giardino delle Rose</span>
+                        <span class="text-xs text-rosebrand-200 font-sans tracking-widest uppercase mt-0.5">Casa Vacanze • Maracalagonis</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium text-slate-200">
+                    <a href="#about" class="hover:text-rosebrand-300 transition-colors">La Dimora</a>
+                    <a href="#availability" class="hover:text-rosebrand-300 transition-colors flex items-center gap-1.5 text-rosebrand-300 font-semibold">
+                        <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                        <span>Calendario Date</span>
+                    </a>
+                    <a href="#location" class="hover:text-rosebrand-300 transition-colors">Posizione & Spiagge</a>
+                    <a href="#gallery" class="hover:text-rosebrand-300 transition-colors">Galleria</a>
+                    <a href="#amenities" class="hover:text-rosebrand-300 transition-colors">Servizi</a>
+                    <a href="#booking" class="hover:text-rosebrand-300 transition-colors">Calcola Preventivo</a>
+                    <a href="#admin" class="hover:text-amber-300 text-amber-200 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 transition-colors flex items-center gap-1">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                        <span>Area Admin</span>
+                    </a>
+                </nav>
+
+                <!-- CTA Button -->
+                <div class="hidden lg:flex items-center space-x-3">
+                    <a href="https://wa.me/393339876543" target="_blank" class="inline-flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        <span>WhatsApp</span>
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="lg:hidden text-white p-2 focus:outline-none" aria-label="Menu">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-slate-900 border-b border-slate-800 text-white px-6 pt-3 pb-6 space-y-3">
+            <a href="#about" class="mobile-link block py-2 text-base font-medium border-b border-slate-800">La Dimora</a>
+            <a href="#availability" class="mobile-link block py-2 text-base font-semibold text-rosebrand-300 border-b border-slate-800">Calendario Date Libere/Occupate</a>
+            <a href="#location" class="mobile-link block py-2 text-base font-medium border-b border-slate-800">Posizione & Spiagge</a>
+            <a href="#gallery" class="mobile-link block py-2 text-base font-medium border-b border-slate-800">Galleria</a>
+            <a href="#booking" class="mobile-link block py-2 text-base font-medium border-b border-slate-800">Calcola Preventivo</a>
+            <a href="#admin" class="mobile-link block py-2 text-base font-medium text-amber-300">Area Amministratore</a>
+            <a href="https://wa.me/393339876543" target="_blank" class="mobile-link block w-full text-center bg-emerald-600 text-white py-3 rounded-xl font-bold mt-2">
+                Contatta su WhatsApp
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-24 pb-16">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=2000&q=80" 
+                 alt="Il Giardino delle Rose Casa Vacanze" 
+                 class="w-full h-full object-cover scale-105">
+            <div class="absolute inset-0 hero-overlay"></div>
+        </div>
+
+        <div class="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs sm:text-sm font-medium tracking-wide text-rosebrand-100 shadow-lg">
+                <i data-lucide="map-pin" class="w-4 h-4 text-rosebrand-400"></i>
+                <span>Via Coco 14, Maracalagonis (CA) • Sud Sardegna</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-serif font-bold tracking-tight leading-tight text-shadow">
+                Il Giardino delle Rose
+            </h1>
+
+            <p class="text-base sm:text-xl text-slate-200 max-w-3xl mx-auto font-light leading-relaxed drop-shadow">
+                Tutta la tranquillità e la pace di <strong>Maracalagonis</strong>. Distante appena <strong>10 minuti dalla Spiaggia del Poetto</strong> e <strong>20-30 minuti da Costa Rei e Villasimius</strong>.
+            </p>
+
+            <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#availability" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-rosebrand-600 hover:bg-rosebrand-700 text-white px-7 py-3.5 rounded-xl font-semibold shadow-xl hover:-translate-y-0.5 transition-all">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span>Verifica Date Libere</span>
+                </a>
+                <a href="#booking" class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white px-7 py-3.5 rounded-xl font-semibold transition-all">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    <span>Calcola Preventivo</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Availability Calendar Public Section -->
+    <section id="availability" class="py-16 bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-10">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rosebrand-100 text-rosebrand-800 text-xs font-bold uppercase tracking-wider">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                    <span>Stato Disponibilità in Tempo Reale</span>
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 mt-3">
+                    Calendario Date & Occupazione
+                </h2>
+                <p class="text-slate-600 mt-2">
+                    Consulta subito le giornate <span class="text-emerald-700 font-bold">Libere (Verde)</span> ed <span class="text-rosebrand-700 font-bold">Occupate (Rosso)</span>. Clicca sulle date libere per avviare il preventivo.
+                </p>
+            </div>
+
+            <!-- Calendar Container Card -->
+            <div class="bg-cream-50 rounded-3xl border border-rosebrand-100 p-6 sm:p-8 shadow-xl">
+                <!-- Month Controls -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200">
+                    <div class="flex items-center space-x-3">
+                        <button id="cal-prev-btn" class="p-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200 shadow-sm transition-all">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <h3 id="cal-month-title" class="text-2xl font-serif font-bold text-slate-900 min-w-[200px] text-center">
+                            Ottobre 2026
+                        </h3>
+                        <button id="cal-next-btn" class="p-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200 shadow-sm transition-all">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="flex items-center space-x-6 text-sm font-medium">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></span>
+                            <span class="text-slate-700 font-semibold">Libera</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3.5 h-3.5 rounded-full bg-rosebrand-600 ring-4 ring-rosebrand-100"></span>
+                            <span class="text-slate-700 font-semibold">Occupata / Prenotata</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Days Header -->
+                <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mer</div>
+                    <div>Gio</div>
+                    <div>Ven</div>
+                    <div>Sab</div>
+                    <div>Dom</div>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Selected Date Info Banner -->
+                <div id="selected-dates-banner" class="mt-6 p-4 rounded-2xl bg-white border border-rosebrand-200 flex flex-col sm:flex-row items-center justify-between gap-4 hidden">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-rosebrand-100 text-rosebrand-700 rounded-xl">
+                            <i data-lucide="check-circle" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold uppercase text-rosebrand-600 tracking-wider">Date Selezionate</span>
+                            <p id="selected-dates-text" class="text-slate-900 font-bold text-sm sm:text-base">Check-in: - | Check-out: -</p>
+                        </div>
+                    </div>
+                    <a href="#booking" class="w-full sm:w-auto bg-rosebrand-600 hover:bg-rosebrand-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all text-center">
+                        Prosegui con il Preventivo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About & Location Details Section -->
+    <section id="about" class="py-16 bg-cream-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <div class="inline-flex items-center space-x-2 text-garden-700 font-semibold text-sm tracking-wider uppercase">
+                        <span class="w-8 h-0.5 bg-rosebrand-500"></span>
+                        <span>Tranquillità & Posizione Strategica</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 leading-tight">
+                        Nel cuore di Maracalagonis, tra mare e relax
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed text-base sm:text-lg">
+                        La casa vacanze <strong>"Il Giardino delle Rose"</strong> si trova in <strong>Via Coco 14 a Maracalagonis (CA)</strong>. Un paese tranquillo e accogliente, ideale per rigenerarsi lontano dal trambusto cittadino dopo una giornata trascorsa in spiaggia.
+                    </p>
+                    <p class="text-slate-600 leading-relaxed">
+                        La sua posizione geografica è uno dei suoi più grandi punti di forza: vi permetterà di muovervi comodamente verso le mete più belle del Sud Sardegna.
+                    </p>
+
+                    <!-- Key highlights -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                        <div class="p-3.5 bg-white rounded-2xl shadow-sm border border-rosebrand-100 text-center">
+                            <i data-lucide="umbrella" class="w-6 h-6 text-rosebrand-600 mx-auto mb-1"></i>
+                            <div class="font-bold text-slate-900 text-base">10 Minuti</div>
+                            <div class="text-xs text-slate-500">Spiaggia Poetto</div>
+                        </div>
+                        <div class="p-3.5 bg-white rounded-2xl shadow-sm border border-rosebrand-100 text-center">
+                            <i data-lucide="sun" class="w-6 h-6 text-garden-600 mx-auto mb-1"></i>
+                            <div class="font-bold text-slate-900 text-base">20/30 Min</div>
+                            <div class="text-xs text-slate-500">Costa Rei & Villasimius</div>
+                        </div>
+                        <div class="p-3.5 bg-white rounded-2xl shadow-sm border border-rosebrand-100 text-center col-span-2 sm:col-span-1">
+                            <i data-lucide="bird" class="w-6 h-6 text-rosebrand-600 mx-auto mb-1"></i>
+                            <div class="font-bold text-slate-900 text-base">15 Minuti</div>
+                            <div class="text-xs text-slate-500">Parco Molentargius</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                        <img src="https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?auto=format&fit=crop&w=1000&q=80" 
+                             alt="Giardino fiorito" 
+                             class="w-full h-[420px] object-cover">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location & Distances Section -->
+    <section id="location" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-rosebrand-600 font-semibold text-sm tracking-wider uppercase">Dove Siamo & Mappa</span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 mt-2">Indicazioni & Distanze Chiave</h2>
+                <p class="text-slate-600 mt-2">
+                    Indirizzo esatto: <strong class="text-slate-900">Via Coco 14, 09069 Maracalagonis (CA)</strong>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <!-- Google Maps Embed -->
+                <div class="lg:col-span-7 bg-slate-100 rounded-3xl overflow-hidden shadow-md border border-slate-200 h-[400px] lg:h-[480px] relative">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3090.722513959828!2d9.2312!3d39.2650!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12e2518e11a1a1a1%3A0x0!2sVia%20Coco%2C%2014%2C%2009069%20Maracalagonis%20CA!5e0!3m2!1sit!2sit!4v1620000000000!5m2!1sit!2sit" 
+                        class="w-full h-full border-0" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        title="Mappa Via Coco 14 Maracalagonis">
+                    </iframe>
+                </div>
+
+                <!-- Attractions list populated via JS -->
+                <div class="lg:col-span-5 space-y-3.5" id="attractions-list">
+                    <!-- Loaded dynamically from SITE_CONFIG -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Photo Gallery -->
+    <section id="gallery" class="py-16 bg-cream-50 border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-10">
+                <span class="text-rosebrand-600 font-semibold text-sm tracking-wider uppercase">Galleria</span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 mt-2">Gli Ambienti della Dimora</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="group relative rounded-2xl overflow-hidden shadow-md cursor-pointer h-64" onclick="openLightbox('https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?auto=format&fit=crop&w=1200&q=80', 'Il Giardino Fiorito con Roseto')">
+                    <img src="https://images.unsplash.com/photo-1588880331179-bc9b93a8cb5e?auto=format&fit=crop&w=800&q=80" alt="Giardino" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-5">
+                        <span class="text-white font-serif font-bold text-lg">Il Roseto & Giardino</span>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-2xl overflow-hidden shadow-md cursor-pointer h-64" onclick="openLightbox('https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=80', 'Camera Matrimoniale Principale')">
+                    <img src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80" alt="Camera da letto" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-5">
+                        <span class="text-white font-serif font-bold text-lg">Camera Matrimoniale</span>
+                    </div>
+                </div>
+
+                <div class="group relative rounded-2xl overflow-hidden shadow-md cursor-pointer h-64" onclick="openLightbox('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80', 'Spiaggia del Poetto (10 minuti)')">
+                    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" alt="Spiaggia Poetto" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-5">
+                        <span class="text-white font-serif font-bold text-lg">Spiaggia del Poetto (10 min)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Amenities Section -->
+    <section id="amenities" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-garden-700 font-semibold text-sm tracking-wider uppercase">Comfort</span>
+                <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 mt-2">Servizi della Casa</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="p-6 bg-cream-50 rounded-2xl border border-rosebrand-100">
+                    <i data-lucide="wifi" class="w-8 h-8 text-rosebrand-600 mb-3"></i>
+                    <h3 class="font-bold text-slate-900 text-lg font-serif">Wi-Fi Fibra Veloce</h3>
+                    <p class="text-slate-500 text-sm mt-1">Connessione inclusa illimitata per ogni esigenza.</p>
+                </div>
+                <div class="p-6 bg-cream-50 rounded-2xl border border-rosebrand-100">
+                    <i data-lucide="wind" class="w-8 h-8 text-rosebrand-600 mb-3"></i>
+                    <h3 class="font-bold text-slate-900 text-lg font-serif">Aria Condizionata</h3>
+                    <p class="text-slate-500 text-sm mt-1">Climatizzazione indipendente per il massimo comfort.</p>
+                </div>
+                <div class="p-6 bg-cream-50 rounded-2xl border border-rosebrand-100">
+                    <i data-lucide="car" class="w-8 h-8 text-rosebrand-600 mb-3"></i>
+                    <h3 class="font-bold text-slate-900 text-lg font-serif">Parcheggio Facile</h3>
+                    <p class="text-slate-500 text-sm mt-1">Zona tranquilla con parcheggio libero di fronte.</p>
+                </div>
+                <div class="p-6 bg-cream-50 rounded-2xl border border-rosebrand-100">
+                    <i data-lucide="flower-2" class="w-8 h-8 text-rosebrand-600 mb-3"></i>
+                    <h3 class="font-bold text-slate-900 text-lg font-serif">Giardino Privato</h3>
+                    <p class="text-slate-500 text-sm mt-1">Area verde riservata per cene e colazioni all'aperto.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Booking / Quote Calculator Section -->
+    <section id="booking" class="py-16 bg-slate-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                
+                <div class="lg:col-span-5 space-y-6">
+                    <span class="text-rosebrand-300 font-semibold text-sm tracking-wider uppercase">Preventivo Veloce</span>
+                    <h2 class="text-3xl sm:text-5xl font-serif font-bold text-white leading-tight">
+                        Calcola il totale per le tue date
+                    </h2>
+                    <p class="text-slate-300 leading-relaxed">
+                        Compila il form per verificare il prezzo aggiornato. Il sistema verifica automaticamente l'effettiva disponibilità del database.
+                    </p>
+                    <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 text-xs space-y-2 text-slate-300">
+                        <div class="flex items-center space-x-2 text-emerald-400 font-semibold">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span>Nessuna commissione intermediari</span>
+                        </div>
+                        <p>Prenotazione diretta con la proprietà di Via Coco 14, Maracalagonis.</p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-7 bg-white text-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                    <form id="public-booking-form" onsubmit="handlePublicBookingSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="pub-checkin" class="block text-xs font-bold text-slate-700 uppercase mb-1">Check-in</label>
+                                <input type="date" id="pub-checkin" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rosebrand-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label for="pub-checkout" class="block text-xs font-bold text-slate-700 uppercase mb-1">Check-out</label>
+                                <input type="date" id="pub-checkout" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rosebrand-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Availability status badge -->
+                        <div id="availability-status-alert" class="p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                <span>Date selezionate DISPONIBILI!</span>
+                            </div>
+                            <span class="text-[10px] uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded">Verificato</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="pub-guests" class="block text-xs font-bold text-slate-700 uppercase mb-1">Ospiti</label>
+                                <select id="pub-guests" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rosebrand-500 focus:outline-none">
+                                    <option value="1">1 Ospite</option>
+                                    <option value="2" selected>2 Ospiti</option>
+                                    <option value="3">3 Ospiti (+€20/notte)</option>
+                                    <option value="4">4 Ospiti (+€40/notte)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="pub-fullname" class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome e Cognome</label>
+                                <input type="text" id="pub-fullname" placeholder="Mario Rossi" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="pub-email" class="block text-xs font-bold text-slate-700 uppercase mb-1">Email</label>
+                                <input type="email" id="pub-email" placeholder="mario@example.com" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            </div>
+                            <div>
+                                <label for="pub-phone" class="block text-xs font-bold text-slate-700 uppercase mb-1">Telefono / WhatsApp</label>
+                                <input type="tel" id="pub-phone" placeholder="+39 333 1234567" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            </div>
+                        </div>
+
+                        <!-- Price calculation details -->
+                        <div class="bg-rosebrand-50 p-4 rounded-2xl border border-rosebrand-200 space-y-2">
+                            <div class="flex justify-between text-sm text-slate-600">
+                                <span>Durata soggiorno:</span>
+                                <span id="summary-nights" class="font-semibold text-slate-800">0 Notti</span>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-600">
+                                <span>Pulizie finali:</span>
+                                <span class="font-semibold text-slate-800">€50</span>
+                            </div>
+                            <hr class="border-rosebrand-200 my-1">
+                            <div class="flex justify-between text-base font-bold text-slate-900 pt-1">
+                                <span>Totale Calcolato:</span>
+                                <span id="summary-total" class="text-2xl text-rosebrand-700 font-serif">€0</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="pub-submit-btn" class="w-full bg-rosebrand-600 hover:bg-rosebrand-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center space-x-2">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                            <span>Invia Richiesta di Prenotazione</span>
+                        </button>
+                    </form>
+
+                    <div id="pub-booking-success" class="hidden mt-4 p-4 rounded-xl bg-emerald-100 text-emerald-800 text-sm text-center font-medium">
+                        Richiesta inviata con successo! Verrai ricontattato a breve per la conferma.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Management Section -->
+    <section id="admin" class="py-16 bg-slate-950 text-slate-100 border-t-4 border-amber-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-800">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold uppercase tracking-wider border border-amber-500/30">
+                        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                        <span>Pannello Amministratore Riservato</span>
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-serif font-bold text-white mt-2">
+                        Gestione Prenotazioni & Calendario
+                    </h2>
+                </div>
+                
+                <!-- Admin Header Status / Logout -->
+                <div id="admin-auth-header-status" class="flex items-center space-x-3 hidden">
+                    <span class="text-xs text-slate-400">Collegato come: <strong id="logged-admin-name" class="text-amber-400">admin</strong></span>
+                    <button onclick="handleAdminLogout()" class="px-3 py-1.5 bg-rosebrand-900/60 hover:bg-rosebrand-800 text-rosebrand-200 rounded-lg text-xs font-medium border border-rosebrand-700 flex items-center space-x-1">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                        <span>Disconnetti</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- LOGIN FORM CONTAINER (Shown when NOT logged in) -->
+            <div id="admin-login-container" class="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-amber-500/30">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-2xl font-serif font-bold text-white">Accedi come Amministratore</h3>
+                    <p class="text-xs text-slate-400 mt-1">Inserisci le credenziali per gestire il calendario e le prenotazioni.</p>
+                </div>
+
+                <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Username</label>
+                        <input type="text" id="login-username" required placeholder="admin" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm">
+                    </div>
+
+                    <div id="login-error-msg" class="hidden p-3 rounded-xl bg-rosebrand-900/80 border border-rosebrand-700 text-rosebrand-200 text-xs font-medium text-center">
+                        Username o password errati!
+                    </div>
+
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2">
+                        <i data-lucide="key" class="w-4 h-4"></i>
+                        <span>Accedi al Pannello</span>
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-slate-800 text-center text-[11px] text-slate-500">
+                    Credenziali di primo accesso: <code class="text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">admin</code> / <code class="text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">rose2026</code>
+                </div>
+            </div>
+
+            <!-- MAIN ADMIN DASHBOARD (Shown ONLY when logged in) -->
+            <div id="admin-dashboard-container" class="hidden space-y-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Admin Add Booking Form -->
+                    <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <h3 class="text-xl font-serif font-bold text-amber-400 mb-4 flex items-center space-x-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            <span>Inserisci Nuova Prenotazione</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-6">
+                            Aggiungi una prenotazione ricevuta via telefono, WhatsApp o altri canali per bloccare immediatamente le date sul calendario pubblico.
+                        </p>
+
+                        <form id="admin-add-form" onsubmit="handleAdminAddBooking(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nome Completo Ospite</label>
+                                <input type="text" id="admin-guest-name" required placeholder="Es. Giuseppe Verdi" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Email</label>
+                                    <input type="email" id="admin-guest-email" required placeholder="ospite@email.it" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Telefono</label>
+                                    <input type="text" id="admin-guest-phone" required placeholder="+39 333..." class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Check-in</label>
+                                    <input type="date" id="admin-checkin" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Check-out</label>
+                                    <input type="date" id="admin-checkout" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Num. Ospiti</label>
+                                    <input type="number" id="admin-guests" min="1" max="6" value="2" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Totale € Confermato</label>
+                                    <input type="number" id="admin-price" min="0" step="10" placeholder="Es. 450" required class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Note Interne</label>
+                                <input type="text" id="admin-notes" placeholder="Es. Prenotato via WhatsApp" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                            </div>
+
+                            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 text-sm mt-2">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>Salva e Blocca Date sul Calendario</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Admin Bookings List Table -->
+                    <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-serif font-bold text-white flex items-center space-x-2">
+                                    <i data-lucide="list" class="w-5 h-5 text-amber-400"></i>
+                                    <span>Elenco Prenotazioni Registrate</span>
+                                </h3>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="resetDefaultBookings()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-lg text-[11px] font-medium border border-slate-700">
+                                        Ripristina Dati
+                                    </button>
+                                    <span id="admin-count-badge" class="px-2.5 py-1 bg-slate-800 text-amber-400 font-mono text-xs font-bold rounded-lg border border-slate-700">0 Totali</span>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-300">
+                                    <thead class="bg-slate-800/80 text-slate-400 uppercase font-mono border-b border-slate-700">
+                                        <tr>
+                                            <th class="p-3">Ospite</th>
+                                            <th class="p-3">Date Check-in / Out</th>
+                                            <th class="p-3">Prezzo</th>
+                                            <th class="p-3">Stato</th>
+                                            <th class="p-3 text-right">Azione</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-table-body" class="divide-y divide-slate-800">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-4 rounded-2xl bg-slate-800/60 border border-slate-800 text-xs text-slate-400 flex items-center space-x-3">
+                            <i data-lucide="info" class="w-5 h-5 text-amber-400 flex-shrink-0"></i>
+                            <p>Cancellando o aggiungendo una prenotazione da questa tabella, lo stato delle date sul calendario pubblico in alto cambierà immediatamente in tempo reale.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Security Settings (Change Password) -->
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                    <h3 class="text-lg font-serif font-bold text-amber-400 mb-2 flex items-center space-x-2">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                        <span>Sicurezza Credenziali Amministratore</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-4">Modifica lo username o la password per l'accesso riservato al pannello.</p>
+
+                    <form onsubmit="handleAdminChangePassword(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nuovo Username</label>
+                            <input type="text" id="change-admin-username" required placeholder="admin" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Nuova Password</label>
+                            <input type="password" id="change-admin-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-xl text-sm">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-bold py-2.5 rounded-xl transition-all text-sm">
+                                Aggiorna Credenziali
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="text-rosebrand-600 font-semibold text-sm tracking-wider uppercase">Contatti Diretti</span>
+                    <h2 class="text-3xl sm:text-5xl font-serif font-bold text-slate-900 mt-2">Informazioni & Richieste</h2>
+                    <p class="text-slate-600 mt-3 leading-relaxed">
+                        Puoi contattarci in qualsiasi momento per richiedere informazioni aggiuntive o verificare esigenze specifiche per il tuo soggiorno.
+                    </p>
+
+                    <div class="mt-8 space-y-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-rosebrand-50 text-rosebrand-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="map-pin" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Indirizzo Esatto</p>
+                                <p class="font-bold text-slate-800">Via Coco 14, 09069 Maracalagonis (CA)</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-rosebrand-50 text-rosebrand-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="phone" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 uppercase font-semibold">Telefono / WhatsApp</p>
+                                <p class="font-bold text-slate-800">+39 333 9876543</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-cream-50 p-8 rounded-3xl border border-rosebrand-100 shadow-sm">
+                    <form onsubmit="handleContactSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome</label>
+                            <input type="text" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email</label>
+                            <input type="email" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Messaggio</label>
+                            <textarea rows="3" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-rosebrand-600 hover:bg-rosebrand-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md">
+                            Invia Messaggio
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+                <div>
+                    <h4 class="text-white font-serif font-bold text-lg">Il Giardino delle Rose</h4>
+                    <p class="text-xs text-slate-500 mt-1">Via Coco 14, 09069 Maracalagonis (CA) • Sardegna</p>
+                </div>
+                <div class="flex items-center space-x-4 text-xs">
+                    <a href="#availability" class="hover:text-rosebrand-300">Calendario Date</a>
+                    <a href="#booking" class="hover:text-rosebrand-300">Preventivo</a>
+                    <a href="#admin" class="hover:text-amber-300">Pannello Admin</a>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-slate-900 text-center text-xs text-slate-600">
+                &copy; 2026 Casa Vacanze Il Giardino delle Rose - Tutti i diritti riservati.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4" onclick="closeLightbox()">
+        <div class="max-w-4xl w-full text-center space-y-3" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="Anteprima" class="max-h-[80vh] mx-auto rounded-xl shadow-2xl">
+            <p id="lightbox-caption" class="text-white font-serif text-lg"></p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // CALENDAR STATE
+        let currentYear = 2026;
+        let currentMonth = 9; // October (0-indexed: 9 = October)
+        let selectedStartDate = null;
+        let selectedEndDate = null;
+
+        const MONTH_NAMES = [
+            "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+            "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+        ];
+
+        // RENDER ATTRACTIONS
+        const attractionsContainer = document.getElementById('attractions-list');
+        if (attractionsContainer && SITE_CONFIG.attractions) {
+            attractionsContainer.innerHTML = `<h3 class="text-2xl font-serif font-bold text-slate-900 mb-2">Distanze & Tempi Reali</h3>` + 
+            SITE_CONFIG.attractions.map(item => `
+                <div class="p-3.5 bg-cream-50 rounded-2xl border border-rosebrand-100 flex items-center justify-between hover:shadow-sm transition-shadow">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-rosebrand-100 text-rosebrand-700 rounded-xl">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 font-serif text-sm">${item.title}</h4>
+                            <p class="text-xs text-slate-500">${item.desc}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold text-rosebrand-700 bg-rosebrand-50 px-2.5 py-1 rounded-full border border-rosebrand-200">${item.time}</span>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // CHECK IF DATE IS OCCUPIED BY DB BOOKINGS
+        function isDateOccupied(dateStr) {
+            const bookings = getStoredBookings();
+            return bookings.some(b => {
+                if (b.status === 'cancelled') return false;
+                return dateStr >= b.check_in && dateStr < b.check_out;
+            });
+        }
+
+        // RENDER CALENDAR GRID
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const monthTitle = document.getElementById('cal-month-title');
+            if (!grid) return;
+
+            grid.innerHTML = '';
+            monthTitle.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            // Adjust day of week (Monday=0, Sunday=6)
+            let startingDay = firstDay.getDay() - 1;
+            if (startingDay === -1) startingDay = 6;
+
+            // Empty padding slots
+            for (let i = 0; i < startingDay; i++) {
+                const emptySlot = document.createElement('div');
+                emptySlot.className = "h-16 sm:h-20 bg-slate-100/50 rounded-xl opacity-30";
+                grid.appendChild(emptySlot);
+            }
+
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(currentYear, currentMonth, day);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                const occupied = isDateOccupied(dateStr);
+
+                const dayCard = document.createElement('div');
+                
+                let isSelected = (selectedStartDate === dateStr) || (selectedEndDate === dateStr);
+                let isInRange = selectedStartDate && selectedEndDate && (dateStr > selectedStartDate && dateStr < selectedEndDate);
+
+                let baseClasses = "h-16 sm:h-20 p-1.5 sm:p-2 rounded-xl flex flex-col justify-between transition-all cursor-pointer relative overflow-hidden border ";
+
+                if (occupied) {
+                    baseClasses += "bg-rosebrand-50 border-rosebrand-200 text-rosebrand-900 hover:bg-rosebrand-100";
+                } else if (isSelected) {
+                    baseClasses += "bg-rosebrand-600 text-white border-rosebrand-700 ring-2 ring-rosebrand-400 shadow-md";
+                } else if (isInRange) {
+                    baseClasses += "bg-rosebrand-100 text-rosebrand-900 border-rosebrand-300";
+                } else {
+                    baseClasses += "bg-emerald-50/80 border-emerald-200 text-slate-800 hover:bg-emerald-100";
+                }
+
+                dayCard.className = baseClasses;
+                dayCard.onclick = () => handleDateClick(dateStr, occupied);
+
+                dayCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-xs sm:text-sm ${isSelected ? 'text-white' : 'text-slate-800'}">${day}</span>
+                        ${occupied 
+                            ? `<span class="text-[9px] sm:text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-rosebrand-600 text-white">Occupata</span>`
+                            : `<span class="text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-600 text-white">Libera</span>`
+                        }
+                    </div>
+                    <div class="text-[10px] font-semibold text-right ${occupied ? 'text-rosebrand-700' : 'text-emerald-700'} ${isSelected ? 'text-white' : ''}">
+                        ${occupied ? 'Non disponibile' : '€' + SITE_CONFIG.basePricePerNight}
+                    </div>
+                `;
+
+                grid.appendChild(dayCard);
+            }
+        }
+
+        // DATE SELECTION HANDLER
+        function handleDateClick(dateStr, isOccupied) {
+            if (isOccupied) {
+                alert(`La data ${dateStr} è occupata. Seleziona una data contrassegnata in verde ("Libera").`);
+                return;
+            }
+
+            if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
+                selectedStartDate = dateStr;
+                selectedEndDate = null;
+            } else if (selectedStartDate && !selectedEndDate) {
+                if (dateStr < selectedStartDate) {
+                    selectedStartDate = dateStr;
+                } else {
+                    selectedEndDate = dateStr;
+                }
+            }
+
+            updateSelectedBanner();
+            renderCalendar();
+
+            // Sync with booking form inputs
+            if (selectedStartDate) document.getElementById('pub-checkin').value = selectedStartDate;
+            if (selectedEndDate) document.getElementById('pub-checkout').value = selectedEndDate;
+            calculatePublicPrice();
+        }
+
+        function updateSelectedBanner() {
+            const banner = document.getElementById('selected-dates-banner');
+            const text = document.getElementById('selected-dates-text');
+            if (selectedStartDate) {
+                banner.classList.remove('hidden');
+                text.textContent = `Check-in: ${selectedStartDate} ${selectedEndDate ? ' | Check-out: ' + selectedEndDate : ' (Seleziona Check-out)'}`;
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        // CALENDAR NAVIGATION
+        document.getElementById('cal-prev-btn').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+
+        document.getElementById('cal-next-btn').addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+
+        // PUBLIC BOOKING CALCULATOR & AVAILABILITY CHECK
+        const pubCheckin = document.getElementById('pub-checkin');
+        const pubCheckout = document.getElementById('pub-checkout');
+        const pubGuests = document.getElementById('pub-guests');
+        const statusAlert = document.getElementById('availability-status-alert');
+        const submitBtn = document.getElementById('pub-submit-btn');
+
+        // Set default dates
+        const today = new Date();
+        const defaultIn = new Date(today);
+        defaultIn.setDate(defaultIn.getDate() + 2);
+        const defaultOut = new Date(defaultIn);
+        defaultOut.setDate(defaultOut.getDate() + 4);
+
+        pubCheckin.value = defaultIn.toISOString().split('T')[0];
+        pubCheckout.value = defaultOut.toISOString().split('T')[0];
+
+        function calculatePublicPrice() {
+            const checkinVal = pubCheckin.value;
+            const checkoutVal = pubCheckout.value;
+            const guestCount = parseInt(pubGuests.value) || 2;
+
+            if (!checkinVal || !checkoutVal || checkoutVal <= checkinVal) {
+                document.getElementById('summary-nights').textContent = '0 Notti';
+                document.getElementById('summary-total').textContent = '€0';
+                return;
+            }
+
+            // Check if range conflicts with database
+            let hasConflict = false;
+            let cur = new Date(checkinVal);
+            const end = new Date(checkoutVal);
+
+            while (cur < end) {
+                const dateString = cur.toISOString().split('T')[0];
+                if (isDateOccupied(dateString)) {
+                    hasConflict = true;
+                    break;
+                }
+                cur.setDate(cur.getDate() + 1);
+            }
+
+            if (hasConflict) {
+                statusAlert.className = "p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all bg-rosebrand-100 text-rosebrand-900 border border-rosebrand-200";
+                statusAlert.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="x-circle" class="w-4 h-4 text-rosebrand-700"></i>
+                        <span>Attenzione: Date OCCUPATE o parzialmente prenotate!</span>
+                    </div>
+                    <span class="text-[10px] uppercase tracking-wider bg-rosebrand-600 text-white px-2 py-0.5 rounded">Non Disponibile</span>
+                `;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                statusAlert.className = "p-3.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all bg-emerald-100 text-emerald-800 border border-emerald-200";
+                statusAlert.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Date selezionate DISPONIBILI!</span>
+                    </div>
+                    <span class="text-[10px] uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded text-emerald-800 font-bold">Verificato</span>
+                `;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            lucide.createIcons();
+
+            const diffDays = Math.ceil(Math.abs(new Date(checkoutVal) - new Date(checkinVal)) / (1000 * 60 * 60 * 24));
+            let extraGuestFee = guestCount > 2 ? (guestCount - 2) * SITE_CONFIG.extraGuestFee : 0;
+            let total = ((SITE_CONFIG.basePricePerNight + extraGuestFee) * diffDays) + SITE_CONFIG.cleaningFee;
+
+            document.getElementById('summary-nights').textContent = `${diffDays} Notti`;
+            document.getElementById('summary-total').textContent = `€${total}`;
+        }
+
+        pubCheckin.addEventListener('change', calculatePublicPrice);
+        pubCheckout.addEventListener('change', calculatePublicPrice);
+        pubGuests.addEventListener('change', calculatePublicPrice);
+
+        function handlePublicBookingSubmit(e) {
+            e.preventDefault();
+            document.getElementById('pub-booking-success').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('pub-booking-success').classList.add('hidden');
+            }, 6000);
+        }
+
+        // ADMIN AUTHENTICATION & UI MANAGEMENT
+        function updateAdminUI() {
+            const loginBox = document.getElementById('admin-login-container');
+            const dashboardBox = document.getElementById('admin-dashboard-container');
+            const authHeaderStatus = document.getElementById('admin-auth-header-status');
+            const loggedNameSpan = document.getElementById('logged-admin-name');
+
+            if (isAdminLoggedIn()) {
+                loginBox.classList.add('hidden');
+                dashboardBox.classList.remove('hidden');
+                authHeaderStatus.classList.remove('hidden');
+                const currentAuth = getAdminAuth();
+                loggedNameSpan.textContent = currentAuth.username;
+                
+                // Pre-fill security form inputs
+                document.getElementById('change-admin-username').value = currentAuth.username;
+                document.getElementById('change-admin-password').value = currentAuth.password;
+
+                renderAdminTable();
+            } else {
+                loginBox.classList.remove('hidden');
+                dashboardBox.classList.add('hidden');
+                authHeaderStatus.classList.add('hidden');
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('login-username').value.trim();
+            const passVal = document.getElementById('login-password').value.trim();
+            const currentAuth = getAdminAuth();
+            const errorMsg = document.getElementById('login-error-msg');
+
+            if (userVal === currentAuth.username && passVal === currentAuth.password) {
+                errorMsg.classList.add('hidden');
+                setAdminLoggedIn(true);
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function handleAdminLogout() {
+            setAdminLoggedIn(false);
+        }
+
+        function handleAdminChangePassword(e) {
+            e.preventDefault();
+            const newU = document.getElementById('change-admin-username').value.trim();
+            const newP = document.getElementById('change-admin-password').value.trim();
+
+            if (newU && newP) {
+                setAdminAuth(newU, newP);
+                alert("Credenziali aggiornate con successo! Usa le nuove credenziali per i prossimi accessi.");
+                updateAdminUI();
+            }
+        }
+
+        window.addEventListener('adminAuthUpdated', updateAdminUI);
+
+        // ADMIN PANEL MANAGEMENT
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            const badge = document.getElementById('admin-count-badge');
+            const bookings = getStoredBookings();
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            badge.textContent = `${bookings.length} Registrate`;
+
+            bookings.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold text-white">${b.guest_name}</div>
+                        <div class="text-[11px] text-slate-400">${b.guest_phone}</div>
+                    </td>
+                    <td class="p-3">
+                        <span class="font-mono text-amber-300">${b.check_in}</span> &rarr; <span class="font-mono text-amber-300">${b.check_out}</span>
+                    </td>
+                    <td class="p-3 font-bold text-emerald-400">€${b.total_price}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-extrabold ${b.status === 'confirmed' ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-700' : 'bg-rosebrand-900/80 text-rosebrand-300'}">
+                            ${b.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteAdminBooking('${b.id}')" class="p-1.5 bg-rosebrand-900/40 hover:bg-rosebrand-800 text-rosebrand-300 rounded-lg border border-rosebrand-700/50 transition-all" title="Elimina prenotazione">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function handleAdminAddBooking(e) {
+            e.preventDefault();
+            const newBooking = {
+                id: "RES-" + Math.floor(1000 + Math.random() * 9000),
+                guest_name: document.getElementById('admin-guest-name').value,
+                guest_email: document.getElementById('admin-guest-email').value,
+                guest_phone: document.getElementById('admin-guest-phone').value,
+                check_in: document.getElementById('admin-checkin').value,
+                check_out: document.getElementById('admin-checkout').value,
+                guests_count: parseInt(document.getElementById('admin-guests').value),
+                total_price: parseFloat(document.getElementById('admin-price').value),
+                status: 'confirmed',
+                payment_status: 'paid',
+                notes: document.getElementById('admin-notes').value || 'Inserita da Admin'
+            };
+
+            const bookings = getStoredBookings();
+            bookings.push(newBooking);
+            saveBookings(bookings);
+
+            document.getElementById('admin-add-form').reset();
+            alert("Prenotazione salvata! Il calendario si è aggiornato rendendo le date occupate.");
+        }
+
+        function deleteAdminBooking(id) {
+            if (confirm("Sei sicuro di voler eliminare questa prenotazione? Le date torneranno disponibili.")) {
+                let bookings = getStoredBookings();
+                bookings = bookings.filter(b => b.id !== id);
+                saveBookings(bookings);
+            }
+        }
+
+        function resetDefaultBookings() {
+            if (confirm("Ripristinare le prenotazioni di test predefinite?")) {
+                saveBookings(DEFAULT_BOOKINGS);
+            }
+        }
+
+        // EVENT LISTENERS FOR SYNC
+        window.addEventListener('bookingsUpdated', () => {
+            renderCalendar();
+            renderAdminTable();
+            calculatePublicPrice();
+        });
+
+        // MOBILE MENU TOGGLE
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        document.querySelectorAll('.mobile-link').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert("Grazie! Il tuo messaggio è stato inviato correttamente.");
+        }
+
+        function openLightbox(src, caption) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox-caption').textContent = caption;
+            document.getElementById('lightbox').classList.remove('hidden');
+            document.getElementById('lightbox').classList.add('flex');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+            document.getElementById('lightbox').classList.remove('flex');
+        }
+
+        // INITIAL LOAD
+        window.onload = function() {
+            renderCalendar();
+            updateAdminUI();
+            calculatePublicPrice();
+        };
+    </script>
+</body>
+</html>
